@@ -1,0 +1,45 @@
+.battle-container {
+    display: flex;
+    width: 800px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+}
+
+.player-pokemon-area, .enemy-pokemon-area {
+    width: 50%;
+    text-align: center;
+}
+
+#player-pokemon-sprite img, #enemy-pokemon-sprite img {
+    max-width: 150px; /* Adjust as needed */
+    max-height: 150px;
+}
+
+#player-pokemon-hp, #enemy-pokemon-hp {
+    background-color: lightgreen; /* Initial HP bar color */
+    height: 10px;
+    width: 100%; /* Will be adjusted dynamically */
+    border: 1px solid black;
+    margin-bottom: 5px;
+}
+
+.battle-log {
+    clear: both;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-top: 20px;
+    height: 100px;
+    overflow-y: scroll;
+}
+
+.action-buttons, .switch-pokemon-area {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.action-buttons button, .switch-pokemon-area button {
+    padding: 8px 15px;
+    margin: 5px;
+    cursor: pointer;
+}

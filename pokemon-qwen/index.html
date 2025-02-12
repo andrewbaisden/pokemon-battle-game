@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Battle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #battle-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .pokemon {
+      width: 150px;
+    }
+    #log {
+      height: 100px;
+      overflow-y: auto;
+      border: 1px solid black;
+      margin-top: 20px;
+      padding: 10px;
+    }
+    button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pokémon Battle</h1>
+  <div id="battle-container">
+    <div id="player-side">
+      <img id="player-sprite" class="pokemon" src="https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif" alt="Player Pokémon">
+      <p id="player-info">Bulbasaur - HP: 100</p>
+      <button onclick="switchPokemon()">Switch Pokémon</button>
+      <div id="player-moves"></div>
+    </div>
+    <div id="enemy-side">
+      <img id="enemy-sprite" class="pokemon" src="https://img.pokemondb.net/sprites/black-white/anim/normal/charmander.gif" alt="Enemy Pokémon">
+      <p id="enemy-info">Charmander - HP: 120</p>
+    </div>
+  </div>
+  <div id="log"></div>
+
+  <script src="battle.js"></script>
+</body>
+</html>

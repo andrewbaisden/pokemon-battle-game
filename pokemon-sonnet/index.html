@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokemon Battle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0f0f0;
+        }
+        #battle-container {
+            width: 800px;
+            height: 400px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .pokemon {
+            width: 150px;
+            height: 150px;
+            position: absolute;
+        }
+        #player-pokemon {
+            bottom: 20px;
+            left: 100px;
+        }
+        #enemy-pokemon {
+            top: 20px;
+            right: 100px;
+        }
+        .stats {
+            position: absolute;
+            padding: 10px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #player-stats {
+            bottom: 20px;
+            right: 20px;
+        }
+        #enemy-stats {
+            top: 20px;
+            left: 20px;
+        }
+        #controls {
+            width: 800px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .health-bar {
+            width: 100px;
+            height: 10px;
+            background: #ff0000;
+            margin-top: 5px;
+        }
+        .health-remaining {
+            height: 100%;
+            background: #00ff00;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="battle-container">
+        <div id="enemy-pokemon" class="pokemon">
+            <img src="/api/placeholder/150/150" alt="Enemy Pokemon">
+        </div>
+        <div id="player-pokemon" class="pokemon">
+            <img src="/api/placeholder/150/150" alt="Player Pokemon">
+        </div>
+        <div id="enemy-stats" class="stats">
+            <div>Enemy <span id="enemy-name"></span> Lv.7</div>
+            <div>HP: <span id="enemy-hp"></span>/<span id="enemy-max-hp"></span></div>
+            <div class="health-bar">
+                <div id="enemy-health-bar" class="health-remaining"></div>
+            </div>
+        </div>
+        <div id="player-stats" class="stats">
+            <div>Your <span id="player-name"></span> Lv.5</div>
+            <div>HP: <span id="player-hp"></span>/<span id="player-max-hp"></span></div>
+            <div class="health-bar">
+                <div id="player-health-bar" class="health-remaining"></div>
+            </div>
+        </div>
+    </div>
+    <div id="controls">
+        <button onclick="attack(0)">Attack 1</button>
+        <button onclick="attack(1)">Attack 2</button>
+        <button onclick="attack(2)">Attack 3</button>
+        <button onclick="attack(3)">Attack 4</button>
+        <button onclick="switchPokemon(0)">Switch to Pokemon 1</button>
+        <button onclick="switchPokemon(1)">Switch to Pokemon 2</button>
+    </div>
+
+    <script>
+        // Pokemon data structure
+        const TYPES = {
+            FIRE: 'FIRE',
+            WATER: 'WATER',
+            GRASS: 'GRASS',
+            ELECTRIC: 'ELECTRIC'
+        };
+
+        const TYPE_EFFECTIVENESS = {
+            [TYPES.FIRE]: { [TYPES.GRASS]: 2, [TYPES.WATER]: 0.5 },
+            [TYPES.WATER]: { [TYPES.FIRE]: 2, [TYPES.GRASS]: 0.5 },
+            [TYPES.GRASS]: { [TYPES.WATER]: 2, [TYPES.FIRE]: 0.5 },
+            [TYPES.ELECTRIC]: { [TYPES.WATER]: 2 }
+        };
+
+        class Pokemon {
+            constructor(name, type, level, baseStats, moves) {
+                this.name = name;
+                this.type = type;
+                this.level = level;
+                this.moves = moves;
+                
+                // Calculate stats based on level
+                const levelMultiplier = level / 5;
+                this.maxHp = Math.floor(baseStats.hp * levelMultiplier);
+                this.hp = this.maxHp;
+                this.attack = Math.floor(baseStats.attack * levelMultiplier);
+                this.defense = Math.floor(baseStats.defense * levelMultiplier);
+            }
+
+            calculateDamage(move, target) {
+                const effectiveness = TYPE_EFFECTIVENESS[move.type]?.[target.type] || 1;
+                const levelFactor = this.level / target.level;
+                const baseDamage = ((2 * this.level / 5 + 2) * move.power * this.attack / target.defense / 50 + 2);
+                
+                return Math.floor(baseDamage * effectiveness * levelFactor);
+            }
+        }
+
+        // Define moves
+        const MOVES = {
+            ember: { name: 'Ember', type: TYPES.FIRE, power: 40 },
+            flamethrower: { name: 'Flamethrower', type: TYPES.FIRE, power: 90 },
+            waterGun: { name: 'Water Gun', type: TYPES.WATER, power: 40 },
+            hydroPump: { name: 'Hydro Pump', type: TYPES.WATER, power: 110 },
+            vineWhip: { name: 'Vine Whip', type: TYPES.GRASS, power: 45 },
+            razorLeaf: { name: 'Razor Leaf', type: TYPES.GRASS, power: 55 },
+            thunderShock: { name: 'Thunder Shock', type: TYPES.ELECTRIC, power: 40 },
+            thunderbolt: { name: 'Thunderbolt', type: TYPES.ELECTRIC, power: 90 }
+        };
+
+        // Initialize Pokemon
+        const playerPokemon = [
+            new Pokemon('Charmander', TYPES.FIRE, 5, 
+                { hp: 39, attack: 52, defense: 43 },
+                [MOVES.ember, MOVES.flamethrower, MOVES.razorLeaf, MOVES.thunderShock]
+            ),
+            new Pokemon('Squirtle', TYPES.WATER, 5,
+                { hp: 44, attack: 48, defense: 65 },
+                [MOVES.waterGun, MOVES.hydroPump, MOVES.vineWhip, MOVES.thunderbolt]
+            )
+        ];
+
+        const enemyPokemon = new Pokemon('Bulbasaur', TYPES.GRASS, 7,
+            { hp: 45, attack: 49, defense: 49 },
+            [MOVES.vineWhip, MOVES.razorLeaf, MOVES.waterGun, MOVES.ember]
+        );
+
+        let currentPlayerPokemon = playerPokemon[0];
+        let gameOver = false;
+
+        // UI update functions
+        function updateStats() {
+            document.getElementById('player-name').textContent = currentPlayerPokemon.name;
+            document.getElementById('player-hp').textContent = currentPlayerPokemon.hp;
+            document.getElementById('player-max-hp').textContent = currentPlayerPokemon.maxHp;
+            document.getElementById('player-health-bar').style.width = 
+                `${(currentPlayerPokemon.hp / currentPlayerPokemon.maxHp) * 100}%`;
+
+            document.getElementById('enemy-name').textContent = enemyPokemon.name;
+            document.getElementById('enemy-hp').textContent = enemyPokemon.hp;
+            document.getElementById('enemy-max-hp').textContent = enemyPokemon.maxHp;
+            document.getElementById('enemy-health-bar').style.width = 
+                `${(enemyPokemon.hp / enemyPokemon.maxHp) * 100}%`;
+
+            // Update attack buttons
+            const buttons = document.querySelectorAll('#controls button');
+            currentPlayerPokemon.moves.forEach((move, i) => {
+                buttons[i].textContent = `${move.name} (${move.type})`;
+            });
+        }
+
+        function attack(moveIndex) {
+            if (gameOver) return;
+
+            // Player's turn
+            const playerMove = currentPlayerPokemon.moves[moveIndex];
+            const playerDamage = currentPlayerPokemon.calculateDamage(playerMove, enemyPokemon);
+            enemyPokemon.hp = Math.max(0, enemyPokemon.hp - playerDamage);
+
+            // Check if enemy is defeated
+            if (enemyPokemon.hp === 0) {
+                alert('You won!');
+                gameOver = true;
+                updateStats();
+                return;
+            }
+
+            // Enemy's turn
+            const enemyMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
+            const enemyMove = enemyPokemon.moves[enemyMoveIndex];
+            const enemyDamage = enemyPokemon.calculateDamage(enemyMove, currentPlayerPokemon);
+            currentPlayerPokemon.hp = Math.max(0, currentPlayerPokemon.hp - enemyDamage);
+
+            // Check if player is defeated
+            if (currentPlayerPokemon.hp === 0) {
+                if (playerPokemon.every(p => p.hp === 0)) {
+                    alert('Game Over! Enemy won!');
+                    gameOver = true;
+                } else {
+                    alert(`${currentPlayerPokemon.name} fainted! Switch to your other Pokemon!`);
+                }
+            }
+
+            updateStats();
+        }
+
+        function switchPokemon(index) {
+            if (gameOver || playerPokemon[index].hp === 0) return;
+            currentPlayerPokemon = playerPokemon[index];
+            updateStats();
+        }
+
+        // Initialize the game
+        updateStats();
+    </script>
+</body>
+</html>

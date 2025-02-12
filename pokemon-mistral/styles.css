@@ -1,0 +1,28 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+#game-container {
+    display: flex;
+    justify-content: space-around;
+    width: 80%;
+}
+
+#player, #enemy {
+    text-align: center;
+}
+
+#player-moves, #enemy-moves {
+    margin-top: 20px;
+}
+
+button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+}

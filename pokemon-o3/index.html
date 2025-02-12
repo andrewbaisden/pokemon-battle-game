@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokemon Battle Arena</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Pokemon Battle Arena</h1>
+  <div id="battlefield">
+    <div id="enemy">
+      <img id="enemy-sprite" src="https://img.pokemondb.net/sprites/black-white/normal/charmander.png" alt="Enemy Pokemon">
+      <div id="enemy-info">
+        <h2>Charmander (Lv. 7)</h2>
+        <p>HP: <span id="enemy-hp">100</span></p>
+      </div>
+    </div>
+    <div id="player">
+      <div id="player-pokemon">
+        <img id="player-sprite" src="https://img.pokemondb.net/sprites/black-white/normal/pikachu.png" alt="Player Pokemon">
+        <div id="player-info">
+          <h2 id="player-name">Pikachu (Lv. 5)</h2>
+          <p>HP: <span id="player-hp">80</span></p>
+        </div>
+      </div>
+      <button id="switch-button">Switch Pokemon</button>
+      <div id="attacks">
+        <button class="attack-button" data-attack="attack1">Attack 1</button>
+        <button class="attack-button" data-attack="attack2">Attack 2</button>
+        <button class="attack-button" data-attack="attack3">Attack 3</button>
+        <button class="attack-button" data-attack="attack4">Attack 4</button>
+      </div>
+    </div>
+  </div>
+  <div id="battle-log"></div>
+  <script src="battle.js"></script>
+</body>
+</html>

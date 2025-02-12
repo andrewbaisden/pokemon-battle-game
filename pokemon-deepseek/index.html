@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokémon Battle</title>
+    <style>
+        .battle-container {
+            width: 800px;
+            margin: 0 auto;
+            font-family: Arial, sans-serif;
+        }
+        .pokemon {
+            display: flex;
+            margin: 20px 0;
+        }
+        .sprite {
+            width: 150px;
+            height: 150px;
+        }
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            border: 2px solid #000;
+            margin: 10px 0;
+        }
+        .current-health {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s;
+        }
+        #battle-log {
+            height: 100px;
+            border: 2px solid #000;
+            padding: 10px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        #actions button {
+            margin: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="battle-container">
+        <!-- Enemy Pokemon -->
+        <div class="pokemon">
+            <div>
+                <img class="sprite" id="enemy-sprite">
+                <div class="health-bar">
+                    <div class="current-health"></div>
+                </div>
+                <span class="name"></span>
+            </div>
+        </div>
+
+        <!-- Player Pokemon -->
+        <div class="pokemon">
+            <div>
+                <img class="sprite" id="player-sprite">
+                <div class="health-bar">
+                    <div class="current-health"></div>
+                </div>
+                <span class="name"></span>
+            </div>
+        </div>
+
+        <div id="battle-log"></div>
+        <div id="actions">
+            <button onclick="useMove(0)">Move 1</button>
+            <button onclick="useMove(1)">Move 2</button>
+            <button onclick="useMove(2)">Move 3</button>
+            <button onclick="useMove(3)">Move 4</button>
+            <button onclick="switchPokemon()">Switch</button>
+        </div>
+    </div>
+
+    <script>
+        const typeEffectiveness = {
+            fire: { strongAgainst: ['grass', 'bug', 'ice'], weakAgainst: ['water', 'rock', 'fire'] },
+            water: { strongAgainst: ['fire', 'ground', 'rock'], weakAgainst: ['grass', 'electric'] },
+            grass: { strongAgainst: ['water', 'ground', 'rock'], weakAgainst: ['fire', 'ice', 'poison', 'flying', 'bug'] },
+            normal: { strongAgainst: [], weakAgainst: ['rock', 'ghost'] }
+        };
+
+        class Pokemon {
+            constructor(name, level, types, baseStats, moves) {
+                this.name = name;
+                this.level = level;
+                this.types = types;
+                this.baseStats = baseStats;
+                this.moves = moves;
+                this.stats = {
+                    hp: this.calculateStat(baseStats.hp, level, true),
+                    attack: this.calculateStat(baseStats.attack, level),
+                    defense: this.calculateStat(baseStats.defense, level),
+                    speed: this.calculateStat(baseStats.speed, level)
+                };
+                this.currentHp = this.stats.hp;
+            }
+
+            calculateStat(base, level, isHP = false) {
+                return isHP 
+                    ? Math.floor((2 * base * level) / 100 + level + 10)
+                    : Math.floor((2 * base * level) / 100 + 5);
+            }
+        }
+
+        // Moves database
+        const moves = {
+            ember: { name: 'Ember', type: 'fire', power: 40 },
+            scratch: { name: 'Scratch', type: 'normal', power: 40 },
+            waterGun: { name: 'Water Gun', type: 'water', power: 40 },
+            tackle: { name: 'Tackle', type: 'normal', power: 40 },
+            vineWhip: { name: 'Vine Whip', type: 'grass', power: 45 }
+        };
+
+        // Initialize Pokemon
+        const charmander = new Pokemon('Charmander', 5, ['fire'], 
+            { hp: 39, attack: 52, defense: 43, speed: 65 },
+            [moves.ember, moves.scratch, moves.tackle, moves.scratch]
+        );
+
+        const squirtle = new Pokemon('Squirtle', 5, ['water'], 
+            { hp: 44, attack: 48, defense: 65, speed: 43 },
+            [moves.waterGun, moves.tackle, moves.scratch, moves.scratch]
+        );
+
+        const bulbasaur = new Pokemon('Bulbasaur', 7, ['grass'], 
+            { hp: 45, attack: 49, defense: 49, speed: 45 },
+            [moves.vineWhip, moves.tackle, moves.scratch, moves.scratch]
+        );
+
+        // Game state
+        let playerPokemon = [charmander, squirtle];
+        let enemyPokemon = bulbasaur;
+        let playerActivePokemon = playerPokemon[0];
+        let enemyActivePokemon = enemyPokemon;
+
+        function calculateDamage(attacker, defender, move) {
+            let effectiveness = 1;
+            defender.types.forEach(type => {
+                if (typeEffectiveness[move.type].strongAgainst.includes(type)) effectiveness *= 2;
+                if (typeEffectiveness[move.type].weakAgainst.includes(type)) effectiveness *= 0.5;
+            });
+
+            const stab = attacker.types.includes(move.type) ? 1.5 : 1;
+            const random = Math.random() * 0.15 + 0.85;
+            
+            return Math.floor(
+                (((2 * attacker.level / 5 + 2) * move.power * 
+                (attacker.stats.attack / defender.stats.defense)) / 50 + 2) *
+                effectiveness * stab * random
+            );
+        }
+
+        function updateUI() {
+            // Update player display
+            document.getElementById('player-sprite').src = 
+                `https://img.pokemondb.net/sprites/red-blue/normal/${playerActivePokemon.name.toLowerCase()}.png`;
+            document.querySelector('.player-pokemon .name').textContent = playerActivePokemon.name;
+            
+            // Update enemy display
+            document.getElementById('enemy-sprite').src = 
+                `https://img.pokemondb.net/sprites/red-blue/normal/${enemyActivePokemon.name.toLowerCase()}.png`;
+            document.querySelector('.enemy-pokemon .name').textContent = enemyActivePokemon.name;
+
+            updateHealthBars();
+        }
+
+        function updateHealthBars() {
+            const playerHp = (playerActivePokemon.currentHp / playerActivePokemon.stats.hp) * 100;
+            document.querySelector('.player-pokemon .current-health').style.width = `${playerHp}%`;
+
+            const enemyHp = (enemyActivePokemon.currentHp / enemyActivePokemon.stats.hp) * 100;
+            document.querySelector('.enemy-pokemon .current-health').style.width = `${enemyHp}%`;
+        }
+
+        function logMessage(message) {
+            const log = document.getElementById('battle-log');
+            log.innerHTML += `${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function disableButtons(disabled) {
+            document.querySelectorAll('#actions button').forEach(button => {
+                button.disabled = disabled;
+            });
+        }
+
+        function useMove(moveIndex) {
+            disableButtons(true);
+            const move = playerActivePokemon.moves[moveIndex];
+            
+            // Determine turn order
+            const playerFirst = playerActivePokemon.stats.speed >= enemyActivePokemon.stats.speed;
+            let enemyFainted = false;
+            let playerFainted = false;
+
+            if (playerFirst) {
+                applyMove(playerActivePokemon, enemyActivePokemon, move);
+                enemyFainted = enemyActivePokemon.currentHp <= 0;
+                
+                if (!enemyFainted) {
+                    const enemyMove = enemyActivePokemon.moves[Math.floor(Math.random() * 4)];
+                    applyMove(enemyActivePokemon, playerActivePokemon, enemyMove);
+                    playerFainted = playerActivePokemon.currentHp <= 0;
+                }
+            } else {
+                const enemyMove = enemyActivePokemon.moves[Math.floor(Math.random() * 4)];
+                applyMove(enemyActivePokemon, playerActivePokemon, enemyMove);
+                playerFainted = playerActivePokemon.currentHp <= 0;
+                
+                if (!playerFainted) {
+                    applyMove(playerActivePokemon, enemyActivePokemon, move);
+                    enemyFainted = enemyActivePokemon.currentHp <= 0;
+                }
+            }
+
+            checkBattleStatus(enemyFainted, playerFainted);
+            disableButtons(false);
+        }
+
+        function applyMove(attacker, defender, move) {
+            const damage = calculateDamage(attacker, defender, move);
+            defender.currentHp = Math.max(defender.currentHp - damage, 0);
+            logMessage(`${attacker.name} used ${move.name}! (${damage} damage)`);
+            updateHealthBars();
+        }
+
+        function checkBattleStatus(enemyFainted, playerFainted) {
+            if (enemyFainted) {
+                logMessage('Enemy fainted! You win!');
+                disableButtons(true);
+            } else if (playerFainted) {
+                logMessage(`${playerActivePokemon.name} fainted!`);
+                const otherPokemon = playerPokemon.find(p => p !== playerActivePokemon && p.currentHp > 0);
+                if (otherPokemon) {
+                    switchPokemon(otherPokemon);
+                } else {
+                    logMessage('All your Pokémon fainted! You lose.');
+                    disableButtons(true);
+                }
+            }
+        }
+
+        function switchPokemon(newPokemon) {
+            if (!newPokemon) {
+                newPokemon = playerPokemon.find(p => p !== playerActivePokemon && p.currentHp > 0);
+                if (!newPokemon) return;
+            }
+            
+            playerActivePokemon = newPokemon;
+            logMessage(`You switched to ${playerActivePokemon.name}!`);
+            updateUI();
+            
+            // Enemy attacks after switch
+            const enemyMove = enemyActivePokemon.moves[Math.floor(Math.random() * 4)];
+            applyMove(enemyActivePokemon, playerActivePokemon, enemyMove);
+            checkBattleStatus(false, playerActivePokemon.currentHp <= 0);
+        }
+
+        // Start battle
+        updateUI();
+        logMessage('A wild Bulbasaur appeared!');
+    </script>
+</body>
+</html>

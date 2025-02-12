@@ -1,0 +1,70 @@
+/* Begin styles.css */
+body {
+  background: #f0f8ff;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  color: #333;
+}
+
+#battlefield {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+#enemy, #player {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px;
+  width: 300px;
+  background: #fff;
+}
+
+#enemy img, #player img {
+  width: 150px;
+  height: auto;
+}
+
+#enemy-info, #player-info {
+  margin-top: 10px;
+}
+
+#attacks {
+  margin-top: 15px;
+}
+
+.attack-button, #switch-button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.attack-button:hover, #switch-button:hover {
+  background: #0056b3;
+}
+
+#battle-log {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 10px;
+  margin-top: 20px;
+  width: 80%;
+  max-width: 600px;
+  height: 200px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+/* End styles.css */
